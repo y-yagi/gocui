@@ -299,19 +299,26 @@ func (v *View) draw() error {
 		v.viewLines = nil
 		for i, line := range v.lines {
 			if v.Wrap {
-				if len(line) < maxX {
+				if len(lineType(line).String()) < maxX {
 					vline := viewLine{linesX: 0, linesY: i, line: line}
 					v.viewLines = append(v.viewLines, vline)
 					continue
 				} else {
-					for n := 0; n <= len(line); n += maxX {
-						if len(line[n:]) <= maxX {
-							vline := viewLine{linesX: n, linesY: i, line: line[n:]}
+					total, n, j := 0, 0, 0
+					var c cell
+					for j, c = range line {
+						total += runewidth.RuneWidth(c.chr)
+						if total > maxX {
+							vline := viewLine{linesX: j, linesY: i, line: line[n:j]}
 							v.viewLines = append(v.viewLines, vline)
-						} else {
-							vline := viewLine{linesX: n, linesY: i, line: line[n : n+maxX]}
-							v.viewLines = append(v.viewLines, vline)
+
+							total = 0
+							n = j
 						}
+					}
+					if n != j {
+						vline := viewLine{linesX: j, linesY: i, line: line[n:j]}
+						v.viewLines = append(v.viewLines, vline)
 					}
 				}
 			} else {
